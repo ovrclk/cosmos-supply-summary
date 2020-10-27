@@ -1,4 +1,4 @@
-module github.com/ovrclk/cosmos-circulating-supply
+module github.com/ovrclk/cosmos-supply-summary
 
 go 1.15
 
