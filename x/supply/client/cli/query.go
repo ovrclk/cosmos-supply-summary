@@ -1,8 +1,8 @@
 package cli
 
 import (
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/query"
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/types"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/query"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/client/flags"

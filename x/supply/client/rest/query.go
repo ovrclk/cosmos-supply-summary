@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/query"
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/types"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/query"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/types"
 )
 
 // RegisterRoutes registers all query routes

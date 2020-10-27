@@ -6,9 +6,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/client/rest"
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/query"
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/types"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/client/rest"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/query"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/types"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	"github.com/cosmos/cosmos-sdk/codec"

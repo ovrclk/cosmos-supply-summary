@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
 
-	"github.com/ovrclk/cosmos-circulating-supply/sdkutil"
-	"github.com/ovrclk/cosmos-circulating-supply/x/supply/types"
+	"github.com/ovrclk/cosmos-supply-summary/sdkutil"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
