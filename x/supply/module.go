@@ -72,17 +72,19 @@ type AppModule struct {
 	AccountKeeper types.AccountKeeper
 	SupplyKeeper  types.SupplyKeeper
 	StakingKeeper types.StakingKeeper
+	DistrKeeper   types.DistrKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(cdc *codec.Codec, accKeeper types.AccountKeeper, supKeeper types.SupplyKeeper,
-	stKeeper types.StakingKeeper) AppModule {
+	stKeeper types.StakingKeeper, distrKeeper types.DistrKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		cdc:            cdc,
 		AccountKeeper:  accKeeper,
 		SupplyKeeper:   supKeeper,
 		StakingKeeper:  stKeeper,
+		DistrKeeper:    distrKeeper,
 	}
 }
 
@@ -111,7 +113,7 @@ func (am AppModule) QuerierRoute() string {
 
 // NewQuerierHandler returns the sdk.Querier for supply module
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return query.NewQuerier(am.cdc, am.AccountKeeper, am.SupplyKeeper, am.StakingKeeper)
+	return query.NewQuerier(am.cdc, am.AccountKeeper, am.SupplyKeeper, am.StakingKeeper, am.DistrKeeper)
 }
 
 // BeginBlock performs no-op

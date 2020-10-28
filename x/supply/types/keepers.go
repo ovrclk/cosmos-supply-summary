@@ -23,3 +23,8 @@ type StakingKeeper interface {
 	IterateAllDelegations(ctx sdk.Context, cb func(stakingtypes.Delegation) bool)
 	BondDenom(ctx sdk.Context) string
 }
+
+// DistrKeeper defines the expected distribution keeper for module accounts
+type DistrKeeper interface {
+	GetFeePoolCommunityCoins(ctx sdk.Context) sdk.DecCoins
+}
