@@ -1,17 +1,21 @@
 package supply
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/ovrclk/cosmos-supply-summary/x/supply/client/rest"
+	"github.com/ovrclk/cosmos-supply-summary/x/supply/client/cli"
 	"github.com/ovrclk/cosmos-supply-summary/x/supply/query"
 	"github.com/ovrclk/cosmos-supply-summary/x/supply/types"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -24,65 +28,70 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the supply module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Marshaler
+}
 
 // Name returns supply module's name
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterCodec registers the suupply module's types for the given codec.
-func (AppModuleBasic) RegisterCodec(_ *codec.Codec) {}
+// RegisterLegacyAminoCodec registers the module types for the given codec.
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
+
+// RegisterInterfaces registers the module's interface types
+func (AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns default genesis state as raw bytes for the supply module.
-func (AppModuleBasic) DefaultGenesis() json.RawMessage {
+func (AppModuleBasic) DefaultGenesis(_ codec.JSONMarshaler) json.RawMessage {
 	return nil
 }
 
 // ValidateGenesis validation check of the Genesis
-func (AppModuleBasic) ValidateGenesis(_ json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(_ codec.JSONMarshaler, _ client.TxEncodingConfig, _ json.RawMessage) error {
 	return nil
 }
 
 // RegisterRESTRoutes registers rest routes for this module
-func (AppModuleBasic) RegisterRESTRoutes(ctx context.CLIContext, rtr *mux.Router) {
-	rest.RegisterRoutes(ctx, rtr)
+func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
+
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the supply module.
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(fmt.Sprintf("couldn't register deployment grpc routes: %s", err.Error()))
+	}
 }
 
 // GetQueryCmd returns the root query command of this module
 // This module has a query which is directly added to SDK supply queries
-func (AppModuleBasic) GetQueryCmd(cdc *codec.Codec) *cobra.Command {
-	return nil
+func (AppModuleBasic) GetQueryCmd() *cobra.Command {
+	return cli.GetQueryCmd()
 }
 
 // GetTxCmd returns the root tx command of this module
-func (AppModuleBasic) GetTxCmd(_ *codec.Codec) *cobra.Command {
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
 }
 
-// GetQueryClient returns a new query client for this module
-func (AppModuleBasic) GetQueryClient(ctx context.CLIContext) query.Client {
-	return query.NewClient(ctx, types.ModuleName)
-}
-
+// AppModule implements an application module for the supply module.
 type AppModule struct {
 	AppModuleBasic
 
-	cdc           *codec.Codec
 	AccountKeeper types.AccountKeeper
-	SupplyKeeper  types.SupplyKeeper
+	BankKeeper    types.BankKeeper
 	StakingKeeper types.StakingKeeper
 	DistrKeeper   types.DistrKeeper
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc *codec.Codec, accKeeper types.AccountKeeper, supKeeper types.SupplyKeeper,
+func NewAppModule(cdc codec.Marshaler, accKeeper types.AccountKeeper, bankKeeper types.BankKeeper,
 	stKeeper types.StakingKeeper, distrKeeper types.DistrKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
-		cdc:            cdc,
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		AccountKeeper:  accKeeper,
-		SupplyKeeper:   supKeeper,
+		BankKeeper:     bankKeeper,
 		StakingKeeper:  stKeeper,
 		DistrKeeper:    distrKeeper,
 	}
@@ -97,13 +106,8 @@ func (AppModule) Name() string {
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the supply module.
-func (am AppModule) Route() string {
-	return ""
-}
-
-// NewHandler returns an sdk.Handler for the supply module.
-func (am AppModule) NewHandler() sdk.Handler {
-	return nil
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.ModuleName, nil)
 }
 
 // QuerierRoute returns the supply module's querier route name.
@@ -111,9 +115,15 @@ func (am AppModule) QuerierRoute() string {
 	return types.ModuleName
 }
 
-// NewQuerierHandler returns the sdk.Querier for supply module
-func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return query.NewQuerier(am.cdc, am.AccountKeeper, am.SupplyKeeper, am.StakingKeeper, am.DistrKeeper)
+// LegacyQuerierHandler returns the sdk.Querier for supply module
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+	return nil
+}
+
+// RegisterServices registers the module's services
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	querier := query.NewQuerier(am.AccountKeeper, am.BankKeeper, am.StakingKeeper, am.DistrKeeper)
+	types.RegisterQueryServer(cfg.QueryServer(), querier)
 }
 
 // BeginBlock performs no-op
@@ -126,11 +136,11 @@ func (am AppModule) EndBlock(ctx sdk.Context, endBlock abci.RequestEndBlock) []a
 
 // InitGenesis performs genesis initialization for the supply module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(_ sdk.Context, _ json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(_ sdk.Context, _ codec.JSONMarshaler, _ json.RawMessage) []abci.ValidatorUpdate {
 	return nil
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the supply module.
-func (am AppModule) ExportGenesis(_ sdk.Context) json.RawMessage {
+func (am AppModule) ExportGenesis(_ sdk.Context, _ codec.JSONMarshaler) json.RawMessage {
 	return nil
 }

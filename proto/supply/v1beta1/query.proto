@@ -1,0 +1,25 @@
+syntax = "proto3";
+package supply.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+import "supply/v1beta1/supply.proto";
+
+option go_package = "github.com/ovrclk/cosmos-supply-summary/x/supply/types";
+
+// Query defines the gRPC querier service
+service Query {
+  // Summary return supply summary
+  rpc Summary(QuerySummaryRequest) returns (QuerySummaryResponse) {
+    option (google.api.http).get = "/supply/v1beta1/summary";
+  }
+}
+
+// QuerySummaryRequest is request type for the Query/Summary RPC method
+message QuerySummaryRequest {}
+
+// QuerySummaryResponse is response type for the Query/Summary RPC method
+message QuerySummaryResponse {
+  Supply supply = 1 [ (gogoproto.nullable) = false ];
+}

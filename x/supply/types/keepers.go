@@ -2,20 +2,21 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/exported"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
 // AccountKeeper defines the expected account keeper for module accounts
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) exported.Account
-	IterateAccounts(ctx sdk.Context, process func(exported.Account) bool)
+	GetAccount(ctx sdk.Context, addr sdk.AccAddress) authtypes.AccountI
+	IterateAccounts(ctx sdk.Context, process func(authtypes.AccountI) bool)
 }
 
-// SupplyKeeper defines the expected supply keeper for module accounts
-type SupplyKeeper interface {
-	GetSupply(ctx sdk.Context) (supply supplyexported.SupplyI)
+// BankKeeper defines the expected bank kseeper for module accounts
+type BankKeeper interface {
+	GetSupply(ctx sdk.Context) (supply bankexported.SupplyI)
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
 
 // StakingKeeper defines the expected staking keeper for module accounts
