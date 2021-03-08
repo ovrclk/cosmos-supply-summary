@@ -1,9 +1,7 @@
 package supply
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -58,10 +56,7 @@ func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the supply module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
-	if err != nil {
-		panic(fmt.Sprintf("couldn't register deployment grpc routes: %s", err.Error()))
-	}
+	cli.RegisterGRPCGatewayRoutes(clientCtx, mux)
 }
 
 // GetQueryCmd returns the root query command of this module

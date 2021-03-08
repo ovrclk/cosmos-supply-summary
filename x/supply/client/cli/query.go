@@ -2,12 +2,22 @@ package cli
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/ovrclk/cosmos-supply-summary/x/supply/types"
 	"github.com/spf13/cobra"
 )
+
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the supply module.
+func RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		panic(fmt.Sprintf("couldn't register akash supply grpc routes: %s", err.Error()))
+	}
+}
 
 // GetQueryCmd returns the query commands for the supply module
 func GetQueryCmd() *cobra.Command {
@@ -33,8 +43,7 @@ func GetSummary() *cobra.Command {
 		Short: "Query for supply deployments",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-			clientCtx, err := client.ReadQueryCommandFlags(clientCtx, cmd.Flags())
+			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
 			}
@@ -46,7 +55,7 @@ func GetSummary() *cobra.Command {
 				return err
 			}
 
-			return clientCtx.PrintOutput(&res.Supply)
+			return clientCtx.PrintProto(&res.Supply)
 		},
 	}
 
