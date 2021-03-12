@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -8,45 +9,45 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 
-	"github.com/ovrclk/cosmos-supply-summary/x/supply/query"
 	"github.com/ovrclk/cosmos-supply-summary/x/supply/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterRoutes registers all query routes
-func RegisterRoutes(ctx context.CLIContext, r *mux.Router) {
+func RegisterRoutes(ctx client.Context, r *mux.Router) {
 	r.HandleFunc("/supply/summary", circulatingSupplyHandler(ctx)).Methods("GET")
 }
 
-func circulatingSupplyHandler(ctx context.CLIContext) http.HandlerFunc {
+func circulatingSupplyHandler(ctx client.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query().Get("q")
+		queryClient := types.NewQueryClient(ctx)
+		res, err := queryClient.Summary(context.Background(), &types.QuerySummaryRequest{})
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
 		if len(q) == 0 {
-			res, err := query.NewRawClient(ctx, types.ModuleName).CirculatingSupply()
+			out, err := ctx.JSONMarshaler.MarshalJSON(res)
 			if err != nil {
 				rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
-			rest.PostProcessResponse(w, ctx, res)
-			return
-		}
-
-		res, err := query.NewClient(ctx, types.ModuleName).CirculatingSupply()
-		if err != nil {
-			rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+			rest.PostProcessResponse(w, ctx, out)
 			return
 		}
 
 		metric := sdk.Coins{}
 		switch q {
 		case "total":
-			metric = res.Total
+			metric = res.Supply.Total
 		case "circulating":
-			metric = res.Circulating
+			metric = res.Supply.Circulating
 		default:
 			rest.WriteErrorResponse(w, http.StatusBadRequest, "wrong query value, allowed values are `total`, `circulating`")
 			return
@@ -59,7 +60,7 @@ func circulatingSupplyHandler(ctx context.CLIContext) http.HandlerFunc {
 			return
 		}
 		if len(decString) == 0 {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, "`decimal` value is required")
+			rest.WriteErrorResponse(w, http.StatusBadRequest, "`decimals` value is required")
 			return
 		}
 
