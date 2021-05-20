@@ -38,6 +38,13 @@ func circulatingSupplyHandler(ctx client.Context) http.HandlerFunc {
 				rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
 				return
 			}
+			height, err := CurrentBlockHeight(ctx)
+			if err != nil {
+				rest.WriteErrorResponse(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			ctx = ctx.WithHeight(height)
 			rest.PostProcessResponse(w, ctx, out)
 			return
 		}
