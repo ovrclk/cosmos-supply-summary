@@ -86,5 +86,6 @@ func (q Querier) Summary(c context.Context, req *types.QuerySummaryRequest) (*ty
 
 	return &types.QuerySummaryResponse{
 		Supply: supplyData,
+		Height: ctx.BlockHeight(),
 	}, nil
 }
