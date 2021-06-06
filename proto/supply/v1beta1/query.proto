@@ -22,5 +22,4 @@ message QuerySummaryRequest {}
 // QuerySummaryResponse is response type for the Query/Summary RPC method
 message QuerySummaryResponse {
   Supply supply = 1 [ (gogoproto.nullable) = false ];
-  int64 height = 2;
 }
