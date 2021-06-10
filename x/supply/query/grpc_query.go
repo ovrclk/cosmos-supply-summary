@@ -63,7 +63,10 @@ func (q Querier) Summary(c context.Context, req *types.QuerySummaryRequest) (*ty
 			vestingCoins := va.GetVestingCoins(ctx.BlockTime())
 			delegatedVesting := va.GetDelegatedVesting()
 			lockedCoins := va.LockedCoins(ctx.BlockTime())
-			spendableCoins := balances.Sub(lockedCoins)
+			var spendableCoins sdk.Coins
+			if balances.AmountOf(bondDenom).GT(lockedCoins.AmountOf(bondDenom)) {
+				spendableCoins = balances.Sub(lockedCoins)
+			}
 			if delegatedVesting.AmountOf(bondDenom).GT(vestingCoins.AmountOf(bondDenom)) {
 				supplyData.Vesting.Bonded = supplyData.Vesting.Bonded.Add(vestingCoins...)
 				supplyData.Available.Bonded = supplyData.Available.Bonded.Add(delegatedVesting...).Sub(vestingCoins)
